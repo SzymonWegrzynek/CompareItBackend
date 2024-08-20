@@ -1,100 +1,84 @@
-use std::error::Error;
-// use sqlx::Row;
+use actix_web::{web, HttpServer, HttpResponse, App};
+use sqlx::postgres::{PgPool, PgPoolOptions, PgQueryResult}; 
+use serde::{Serialize, Deserialize};
 
-struct Phones {
-    pub id: i32,
-    pub manufacturer: String,
-    pub model: String,
-    pub price: String,
-    pub colors: Option<String>,
-    pub internal_memory_variants: Option<String>,
-    pub battery_capacity: Option<String>,
-    pub screen_size: Option<String>,
-    pub screen_technology: Option<String>,
-    pub resolution: Option<String>,
-    pub screen_refresh_rate: Option<String>,
-    pub ram_memory: Option<String>,
-    pub camera: Option<String>,
-    pub processor: Option<String>,
-    pub processor_speed: Option<String>,
-    pub processor_cores: Option<i32>,
-    pub operating_system: Option<String>,
-    pub connectivity: Option<String>,
-    pub dust_water_resistance_standard: Option<String>,
-    pub sim_card_type: Option<String>,
+#[derive(Clone)]
+struct AppState {
+    pool: PgPool
 }
 
-async fn create(phones: &Phones, pool: &sqlx::PgPool) -> Result<(), Box<dyn Error>> {
-    let query = "INSERT INTO phones (id, manufacturer, model, price, colors, internal_memory_variants, 
-    battery_capacity, screen_size, screen_technology, resolution,screen_refresh_rate, ram_memory, camera, 
-    processor, processor_speed, processor_cores, operating_system, connectivity, dust_water_resistance_standard, 
-    sim_card_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)";
+#[derive(Serialize, Deserialize)]
+struct Phone {
+    id: i32,
+    model: String
+}
 
-    sqlx::query(query)
-    .bind(&phones.id)
-    .bind(&phones.manufacturer)
-    .bind(&phones.model)
-    .bind(&phones.price)
-    .bind(&phones.colors)
-    .bind(&phones.internal_memory_variants)
-    .bind(&phones.battery_capacity)
-    .bind(&phones.screen_size)
-    .bind(&phones.screen_technology)
-    .bind(&phones.resolution)
-    .bind(&phones.screen_refresh_rate)
-    .bind(&phones.ram_memory)
-    .bind(&phones.camera)
-    .bind(&phones.processor)
-    .bind(&phones.processor_speed)
-    .bind(&phones.processor_cores)
-    .bind(&phones.operating_system)
-    .bind(&phones.connectivity)
-    .bind(&phones.dust_water_resistance_standard)
-    .bind(&phones.sim_card_type)
-    .execute(pool)
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+
+    const DB_URL: &str = "postgres://admin:admin@localhost:5432/ci_db";
+
+    let pool: PgPool = PgPoolOptions::new()
+    .max_connections(10)
+    .connect(DB_URL)
+    .await
+    .unwrap();
+
+    let app_state = AppState {pool};
+
+    HttpServer::new(move || {
+        App::new()
+        .app_data(web::Data::new(app_state.clone()))
+        .route("/", web::get().to(root))
+        .route("/get/{phone_id}", web::get().to(get_phone))
+        .route("/delete/{phone_id}", web::delete().to(delete_phone))
+        .route("/get", web::get().to(get_phones))
+    }).bind(("localhost", 8000))?
+    .run()
     .await?;
 
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    let url = "postgres://admin:admin@localhost:5432/ci_db";
-    let pool = sqlx::postgres::PgPool::connect(url).await?;
+async fn root() -> String {
+    "Server is up and running".to_string()
+}
 
-    sqlx::migrate!("./migrations").run(&pool).await?;
+async fn get_phone(path: web::Path<usize>, app_state: web::Data<AppState>) -> HttpResponse {
+    let phone_id: usize = path.into_inner();
 
-    let phone = Phones{
-        id: 1,
-        manufacturer: "Samsung".to_string(),
-        model: "Galaxy S24".to_string(),
-        price: "3499.00 PLN".to_string(),
-        colors: Some("Marble Gray".to_string()),
-        internal_memory_variants: Some("128GB, 256GB".to_string()),
-        battery_capacity: Some("4000 mAh".to_string()),
-        screen_size: Some("6.2\"".to_string()),
-        screen_technology: Some("Dynamic AMOLED 2X".to_string()),
-        resolution: Some("2340 x 1080".to_string()),
-        screen_refresh_rate: Some("120 Hz".to_string()),
-        ram_memory: Some("8 GB".to_string()),
-        camera: Some("Rear 50MP + 12MP + 10MP, Front 12MP".to_string()),
-        processor: Some("Samsung Exynos 2400".to_string()),
-        processor_speed: Some("3.2 GHz".to_string()),
-        processor_cores: Some(10),
-        operating_system: Some("Android".to_string()),
-        connectivity: Some("5G, NFC, Wi-Fi, Bluetooth 5.3, USB Type-C".to_string()),
-        dust_water_resistance_standard: Some("IP68".to_string()),
-        sim_card_type: Some("NanoSIM, eSIM".to_string()),
-    };
+    let phone: sqlx::Result<Phone> = sqlx::query_as!(
+        Phone,
+        "SELECT id, model FROM phones WHERE id = $1",
+        phone_id as i64,
+    ).fetch_one(&app_state.pool).await;
 
-    create(&phone, &pool).await?;
+    match phone {
+        Ok(phone) => HttpResponse::Ok().json(phone),
+        Err(_) => HttpResponse::BadRequest().into()
+    }
+}
 
-    // let res = sqlx::query("SELECT 1 + 1 AS sum")
-    // .fetch_one(&pool)
-    // .await?;
+async fn delete_phone(path: web::Path<usize>, app_state: web::Data<AppState>) -> HttpResponse {
+    let phone_id: usize = path.into_inner();
 
-    // let sum: i32 = res.get("sum");
-    // println!("1 + 1 = {}", sum);
+    let deleted: sqlx::Result<PgQueryResult> = sqlx::query!(
+        "DELETE FROM phones WHERE id = $1",
+        phone_id as i64,
+    ).execute(&app_state.pool).await;
 
-    Ok(())
+    match deleted {
+        Ok(_) => HttpResponse::Ok().into(),
+        Err(_) => HttpResponse::BadRequest().into(),
+    }
+}
+
+async fn get_phones(app_state: web::Data<AppState>) -> HttpResponse {
+    match sqlx::query_as!(
+        Phone,
+        "SELECT id, model FROM phones"
+    ).fetch_all(&app_state.pool).await {
+        Ok(phones) => HttpResponse::Ok().json(phones),
+        Err(_) => HttpResponse::InternalServerError().into()
+    }
 }
