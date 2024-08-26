@@ -1,84 +1,33 @@
-use actix_web::{web, HttpServer, HttpResponse, App};
-use sqlx::postgres::{PgPool, PgPoolOptions, PgQueryResult}; 
-use serde::{Serialize, Deserialize};
+use actix_web::{web, App, HttpServer};
+use actix_cors::Cors;
+use dotenv::dotenv;
 
-#[derive(Clone)]
-struct AppState {
-    pool: PgPool
-}
+mod api;
+mod database;
+mod modules;
+mod state;
+mod models;
 
-#[derive(Serialize, Deserialize)]
-struct Phone {
-    id: i32,
-    model: String
-}
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> std::io::Result<()> {    
+    dotenv().ok();
 
-    const DB_URL: &str = "postgres://admin:admin@localhost:5432/ci_db";
+    let pool = database::conn::create_pool().await;
 
-    let pool: PgPool = PgPoolOptions::new()
-    .max_connections(10)
-    .connect(DB_URL)
-    .await
-    .unwrap();
-
-    let app_state = AppState {pool};
+    let app_state = state::AppState {pool};
 
     HttpServer::new(move || {
         App::new()
         .app_data(web::Data::new(app_state.clone()))
-        .route("/", web::get().to(root))
-        .route("/get/{phone_id}", web::get().to(get_phone))
-        .route("/delete/{phone_id}", web::delete().to(delete_phone))
-        .route("/get", web::get().to(get_phones))
+        .wrap(Cors::default().allow_any_origin().allow_any_method().allow_any_header())
+        .route("/health-check", web::get().to(api::app::health_check))
+        .route("/get/{phone_id}", web::get().to(api::app::get_phone))
+        .route("/delete/{phone_id}", web::delete().to(api::app::delete_phone))
+        .route("/get-all", web::get().to(api::app::get_all))
     }).bind(("localhost", 8000))?
     .run()
     .await?;
 
     Ok(())
-}
-
-async fn root() -> String {
-    "Server is up and running".to_string()
-}
-
-async fn get_phone(path: web::Path<usize>, app_state: web::Data<AppState>) -> HttpResponse {
-    let phone_id: usize = path.into_inner();
-
-    let phone: sqlx::Result<Phone> = sqlx::query_as!(
-        Phone,
-        "SELECT id, model FROM phones WHERE id = $1",
-        phone_id as i64,
-    ).fetch_one(&app_state.pool).await;
-
-    match phone {
-        Ok(phone) => HttpResponse::Ok().json(phone),
-        Err(_) => HttpResponse::BadRequest().into()
-    }
-}
-
-async fn delete_phone(path: web::Path<usize>, app_state: web::Data<AppState>) -> HttpResponse {
-    let phone_id: usize = path.into_inner();
-
-    let deleted: sqlx::Result<PgQueryResult> = sqlx::query!(
-        "DELETE FROM phones WHERE id = $1",
-        phone_id as i64,
-    ).execute(&app_state.pool).await;
-
-    match deleted {
-        Ok(_) => HttpResponse::Ok().into(),
-        Err(_) => HttpResponse::BadRequest().into(),
-    }
-}
-
-async fn get_phones(app_state: web::Data<AppState>) -> HttpResponse {
-    match sqlx::query_as!(
-        Phone,
-        "SELECT id, model FROM phones"
-    ).fetch_all(&app_state.pool).await {
-        Ok(phones) => HttpResponse::Ok().json(phones),
-        Err(_) => HttpResponse::InternalServerError().into()
-    }
 }
