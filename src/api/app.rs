@@ -1,7 +1,10 @@
 use sqlx::postgres::PgQueryResult; 
 use actix_web::{web, HttpResponse};
+
 use crate::state::AppState;
 use crate::models::phone::Phone;
+use crate::models::insert_image_request::InsertImageRequest;
+use crate::modules::insert_image::get_stock_image;
 
 
 pub async fn health_check() -> HttpResponse {
@@ -47,5 +50,15 @@ pub async fn get_all(app_state: web::Data<AppState>) -> HttpResponse {
     ).fetch_all(&app_state.pool).await {
         Ok(phones) => HttpResponse::Ok().json(phones),
         Err(_) => HttpResponse::InternalServerError().into()
+    }
+}
+
+
+pub async fn insert_image(app_state: web::Data<AppState>, form: web::Json<InsertImageRequest>) -> HttpResponse {
+    let image = get_stock_image(&form.file_path);
+
+    match sqlx::query!("UPDATE phones SET images = $1 WHERE id = $2", image, &form.phone_id).execute(&app_state.pool).await {
+        Ok(_) => HttpResponse::Ok().into(),
+        Err(_) => HttpResponse::BadRequest().into()
     }
 }

@@ -25,6 +25,7 @@ async fn main() -> std::io::Result<()> {
         .route("/get/{phone_id}", web::get().to(api::app::get_phone))
         .route("/delete/{phone_id}", web::delete().to(api::app::delete_phone))
         .route("/get-all", web::get().to(api::app::get_all))
+        .route("/insert-image", web::post().to(api::app::insert_image))
     }).bind(("localhost", 8000))?
     .run()
     .await?;

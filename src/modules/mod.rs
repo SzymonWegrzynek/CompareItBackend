@@ -1,1 +1,1 @@
-pub mod insert_img;
+pub mod insert_image;
