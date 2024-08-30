@@ -13,3 +13,4 @@ sqlx = { version = "0.6.2", features = ["postgres", "runtime-tokio-rustls", "run
 serde = { version = "1.0.209", features = ["derive"]}
 config = "0.14.0"
 dotenv = "0.15"
+base64 = "0.22"

@@ -3,8 +3,10 @@ use actix_web::{web, HttpResponse};
 
 use crate::state::AppState;
 use crate::models::phone::Phone;
+use crate::models::image::Image;
 use crate::models::insert_image_request::InsertImageRequest;
 use crate::modules::insert_image::get_stock_image;
+use crate::modules::insert_image::to_base64;
 
 
 pub async fn health_check() -> HttpResponse {
@@ -59,6 +61,17 @@ pub async fn insert_image(app_state: web::Data<AppState>, form: web::Json<Insert
 
     match sqlx::query!("UPDATE phones SET images = $1 WHERE id = $2", image, &form.phone_id).execute(&app_state.pool).await {
         Ok(_) => HttpResponse::Ok().into(),
+        Err(_) => HttpResponse::BadRequest().into()
+    }
+}
+
+pub async fn get_image(path: web::Path<usize>, app_state: web::Data<AppState>) -> HttpResponse {
+    let phone_id: usize = path.into_inner();
+
+    let result: sqlx::Result<Image> = sqlx::query_as!(Image, "SELECT images FROM phones WHERE id = $1", phone_id as i64).fetch_one(&app_state.pool).await;
+
+    match result {
+        Ok(image) => {let image_to_base64 = to_base64(image.images); HttpResponse::Ok().json(image_to_base64)},
         Err(_) => HttpResponse::BadRequest().into()
     }
 }
