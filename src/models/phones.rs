@@ -23,5 +23,4 @@ pub struct Phone {
     pub connectivity: Option<String>,
     pub dust_water_resistance_standard: Option<String>,
     pub sim_card_type: Option<String>,
-    pub images: Option<Vec<u8>>
 }

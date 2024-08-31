@@ -22,9 +22,10 @@ async fn main() -> std::io::Result<()> {
         .app_data(web::Data::new(app_state.clone()))
         .wrap(Cors::default().allow_any_origin().allow_any_method().allow_any_header())
         .route("/health-check", web::get().to(api::app::health_check))
-        .route("/get/{phone_id}", web::get().to(api::app::get_phone))
-        .route("/delete/{phone_id}", web::delete().to(api::app::delete_phone))
-        .route("/get-all", web::get().to(api::app::get_all))
+        .route("/get-phone/{phone_id}", web::get().to(api::app::get_phone))
+        .route("/get-all-phones", web::get().to(api::app::get_all_phones))
+        .route("/delete-phone/{phone_id}", web::delete().to(api::app::delete_phone))
+        .route("/get-all-images", web::get().to(api::app::get_all_images))
         .route("/insert-image", web::post().to(api::app::insert_image))
         .route("/get-image/{phone_id}", web::get().to(api::app::get_image))
     }).bind(("localhost", 8000))?

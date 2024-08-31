@@ -13,9 +13,7 @@ pub fn get_stock_image(file_path: &str) -> Vec<u8> {
     storage
 }
 
-pub fn to_base64(image: Option<Vec<u8>>) -> String {
-    match image {
-        Some(data) => general_purpose::STANDARD.encode(&data),
-        None => String::new()
-    }
+
+pub fn to_base64(image: Vec<u8>) -> String {
+    general_purpose::STANDARD.encode(&image)
 }

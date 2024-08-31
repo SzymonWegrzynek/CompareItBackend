@@ -9,7 +9,7 @@ dependencies = [
  "actix-cors",
  "actix-rt",
  "actix-web",
- "base64 0.22.1",
+ "base64 0.21.7",
  "chrono",
  "config",
  "dotenv",
