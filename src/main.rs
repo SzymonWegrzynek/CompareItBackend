@@ -2,32 +2,33 @@ use actix_web::{web, App, HttpServer};
 use actix_cors::Cors;
 use dotenv::dotenv;
 
-mod api;
+mod controllers;
 mod database;
+mod models;
 mod modules;
 mod state;
-mod models;
 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {    
     dotenv().ok();
 
-    let pool = database::conn::create_pool().await;
+    let db_conn = database::conn::DatabaseConn::create_pool().await;
+    let pool = db_conn.pool().clone();
 
-    let app_state = state::AppState {pool};
+    let app_state = state::AppState { pool };
 
     HttpServer::new(move || {
         App::new()
         .app_data(web::Data::new(app_state.clone()))
         .wrap(Cors::default().allow_any_origin().allow_any_method().allow_any_header())
-        .route("/health-check", web::get().to(api::app::health_check))
-        .route("/get-phone/{phone_id}", web::get().to(api::app::get_phone))
-        .route("/get-all-phones", web::get().to(api::app::get_all_phones))
-        .route("/delete-phone/{phone_id}", web::delete().to(api::app::delete_phone))
-        .route("/get-all-images", web::get().to(api::app::get_all_images))
-        .route("/insert-image", web::post().to(api::app::insert_image))
-        .route("/get-image/{phone_id}", web::get().to(api::app::get_image))
+        .route("/health-check", web::get().to(controllers::phone_controller::PhoneController::health_check))
+        .route("/get-phone/{phone_id}", web::get().to(controllers::phone_controller::PhoneController::get_phone))
+        .route("/get-all-phones", web::get().to(controllers::phone_controller::PhoneController::get_all_phones))
+        .route("/delete-phone/{phone_id}", web::delete().to(controllers::phone_controller::PhoneController::delete_phone))
+        .route("/get-all-images", web::get().to(controllers::image_controller::ImageController::get_all_images))
+        .route("/insert-image", web::post().to(controllers::image_controller::ImageController::insert_image))
+        .route("/get-image/{phone_id}", web::get().to(controllers::image_controller::ImageController::get_image))
     }).bind(("localhost", 8000))?
     .run()
     .await?;

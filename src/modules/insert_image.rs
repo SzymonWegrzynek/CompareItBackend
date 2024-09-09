@@ -4,16 +4,24 @@ use std::path::Path;
 use base64::{engine::general_purpose, Engine};
 
 
-pub fn get_stock_image(file_path: &str) -> Vec<u8> {
-    let path = Path::new(file_path);
-    let file = File::open(path).unwrap();
-    let mut reader = BufReader::new(file);
-    let mut storage: Vec<u8> = Vec::new();
-    reader.read_to_end(&mut storage).unwrap();
-    storage
+pub struct StockImage {
+    pub data: Vec<u8>
 }
 
 
-pub fn to_base64(image: Vec<u8>) -> String {
-    general_purpose::STANDARD.encode(&image)
+impl StockImage {
+    pub fn get_stock_image(file_path: &str) -> Self {
+        let path = Path::new(file_path);
+        let file = File::open(path).unwrap();
+        let mut reader = BufReader::new(file);
+        let mut storage: Vec<u8> = Vec::new();
+        reader.read_to_end(&mut storage).unwrap();
+        
+        StockImage { data: storage }
+    }
+
+
+    pub fn to_base64(&self) -> String {
+        general_purpose::STANDARD.encode(&self.data)
+    }
 }
