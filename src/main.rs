@@ -7,6 +7,7 @@ mod database;
 mod models;
 mod modules;
 mod state;
+mod tests;
 
 
 #[actix_web::main]
