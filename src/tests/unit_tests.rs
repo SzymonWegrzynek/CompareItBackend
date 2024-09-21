@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod tests {
     use crate::database::conn::DatabaseConn;
-    use std::env;
     use dotenv::dotenv;
     use sqlx::query;
+    use std::env;
 
     #[tokio::test]
-    async fn unit_test_create_pool() {
+    async fn test_create_pool() {
         dotenv().ok();
 
         let db_url = env::var("DATABASE_URL");
