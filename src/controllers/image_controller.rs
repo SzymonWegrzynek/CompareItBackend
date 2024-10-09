@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse};
 
-use crate::models::images::Image;
+use crate::models::image::Image;
 use crate::models::insert_image_request::InsertImageRequest;
 use crate::modules::insert_image::StockImage;
 use crate::state::AppState;
@@ -9,7 +9,7 @@ pub struct ImageController;
 
 impl ImageController {
     pub async fn get_all_images(app_state: web::Data<AppState>) -> HttpResponse {
-        match sqlx::query_as!(Image, "SELECT * FROM Images")
+        match sqlx::query_as!(Image, "SELECT * FROM Image")
             .fetch_all(&app_state.pool)
             .await
         {
@@ -22,11 +22,11 @@ impl ImageController {
         app_state: web::Data<AppState>,
         form: web::Json<InsertImageRequest>,
     ) -> HttpResponse {
-        let stock_image = StockImage::get_stock_image(&form.file_path);
+        let stock_image = StockImage::get_stock_image(&form.image_url);
 
         match sqlx::query!(
-            "INSERT INTO Images (phone_id, image) VALUES ($1, $2)",
-            &form.phone_id,
+            "INSERT INTO Image (model_id, image_url) VALUES ($1, $2)",
+            &form.model_id,
             stock_image.data
         )
         .execute(&app_state.pool)
@@ -42,7 +42,7 @@ impl ImageController {
 
         let result: sqlx::Result<Vec<Image>> = sqlx::query_as!(
             Image,
-            "SELECT id, phone_id, image FROM Images WHERE phone_id = $1",
+            "SELECT image_id, model_id, image_url FROM Image WHERE model_id = $1",
             phone_id as i64,
         )
         .fetch_all(&app_state.pool)
@@ -53,7 +53,9 @@ impl ImageController {
                 let image_to_base64: Vec<String> = images
                     .into_iter()
                     .map(|image| {
-                        let stock_image = StockImage { data: image.image };
+                        let stock_image = StockImage {
+                            data: image.image_url,
+                        };
                         stock_image.to_base64()
                     })
                     .collect();

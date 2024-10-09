@@ -1,3 +1,3 @@
-pub mod images;
+pub mod image;
 pub mod insert_image_request;
-pub mod phones;
+pub mod phone;

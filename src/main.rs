@@ -28,7 +28,7 @@ async fn main() -> std::io::Result<()> {
                     .allow_any_header(),
             )
             .route(
-                "/health-check",
+                "/healthcheck",
                 web::get().to(controllers::phone_controller::PhoneController::health_check),
             )
             .route(
