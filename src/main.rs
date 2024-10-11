@@ -40,10 +40,6 @@ async fn main() -> std::io::Result<()> {
                 web::get().to(controllers::phone_controller::PhoneController::get_all_phones),
             )
             .route(
-                "/delete-phone/{phone_id}",
-                web::delete().to(controllers::phone_controller::PhoneController::delete_phone),
-            )
-            .route(
                 "/get-all-images",
                 web::get().to(controllers::image_controller::ImageController::get_all_images),
             )

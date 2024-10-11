@@ -1,5 +1,4 @@
 use actix_web::{web, HttpResponse};
-use sqlx::postgres::PgQueryResult;
 
 use crate::models::phone::Phone;
 use crate::state::AppState;
@@ -14,13 +13,10 @@ impl PhoneController {
     pub async fn get_phone(app_state: web::Data<AppState>, path: web::Path<usize>) -> HttpResponse {
         let phone_id: usize = path.into_inner();
 
-        let phone: sqlx::Result<Phone> = sqlx::query_as!(
-            Phone,
-            "SELECT * FROM Phone WHERE phone_id = $1",
-            phone_id as i64,
-        )
-        .fetch_one(&app_state.pool)
-        .await;
+        let phone: sqlx::Result<Phone> =
+            sqlx::query_file_as!(Phone, "src/queries/get_phone_by_id.sql", phone_id as i64,)
+                .fetch_one(&app_state.pool)
+                .await;
 
         match phone {
             Ok(phone) => HttpResponse::Ok().json(phone),
@@ -29,29 +25,12 @@ impl PhoneController {
     }
 
     pub async fn get_all_phones(app_state: web::Data<AppState>) -> HttpResponse {
-        match sqlx::query_as!(Phone, "SELECT * FROM Phone")
+        match sqlx::query_file_as!(Phone, "src/queries/get_phone.sql")
             .fetch_all(&app_state.pool)
             .await
         {
             Ok(phones) => HttpResponse::Ok().json(phones),
             Err(_) => HttpResponse::BadRequest().into(),
-        }
-    }
-
-    pub async fn delete_phone(
-        app_state: web::Data<AppState>,
-        path: web::Path<usize>,
-    ) -> HttpResponse {
-        let phone_id: usize = path.into_inner();
-
-        let deleted: sqlx::Result<PgQueryResult> =
-            sqlx::query!("DELETE FROM Phone WHERE phone_id = $1", phone_id as i64,)
-                .execute(&app_state.pool)
-                .await;
-
-        match deleted {
-            Ok(_) => HttpResponse::Ok().into(),
-            _ => HttpResponse::BadRequest().into(),
         }
     }
 }
