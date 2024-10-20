@@ -1,7 +1,6 @@
 use actix_web::{web, HttpResponse};
 
-use crate::models::image::Image;
-use crate::models::insert_image_request::InsertImageRequest;
+use crate::models::image::{Image, InsertImageRequest};
 use crate::modules::insert_image::StockImage;
 use crate::state::AppState;
 

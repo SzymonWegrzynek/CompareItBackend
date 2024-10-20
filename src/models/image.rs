@@ -6,3 +6,9 @@ pub struct Image {
     pub model_id: Option<i32>,
     pub image_url: Vec<u8>,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct InsertImageRequest {
+    pub model_id: i32,
+    pub image_url: String,
+}
