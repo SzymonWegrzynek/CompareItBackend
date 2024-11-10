@@ -10,7 +10,7 @@ mod tests {
         dotenv().ok();
 
         let db_url = env::var("DATABASE_URL");
-        assert!(db_url.is_ok(), "no DATABASE_URL in .env");
+        assert!(db_url.is_ok(), "DATABASE_URL must be set");
 
         let db_conn = DatabaseConn::create_pool().await;
         let result = query("SELECT 1").fetch_one(db_conn.pool()).await;

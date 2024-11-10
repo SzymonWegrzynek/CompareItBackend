@@ -19,7 +19,11 @@ SELECT
     ARRAY_AGG(DISTINCT SimCard.sim_card_type) AS sim_cards, 
     ARRAY_AGG(DISTINCT InternalMemory.internal_memory_variant) AS memory_variants,
     ARRAY_AGG(DISTINCT Connectivity.connectivity) AS connectivities,
-    ARRAY_AGG(DISTINCT Image.image_url) AS images   
+    (
+        SELECT ARRAY_AGG(image_url ORDER BY image_id ASC)
+        FROM Image
+        WHERE Image.model_id = Phone.model_id
+    ) AS images   
 FROM Phone
 JOIN Producer ON Phone.producer_id = Producer.producer_id
 JOIN Model ON Phone.model_id = Model.model_id

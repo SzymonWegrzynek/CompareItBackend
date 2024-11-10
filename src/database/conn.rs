@@ -7,7 +7,7 @@ pub struct DatabaseConn {
 
 impl DatabaseConn {
     pub async fn create_pool() -> Self {
-        let db_url: String = env::var("DATABASE_URL").expect("no DATABASE_URL in .env");
+        let db_url: String = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
         let pool: PgPool = PgPoolOptions::new()
             .max_connections(10)

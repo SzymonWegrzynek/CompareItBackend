@@ -1,11 +1,14 @@
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
+use std::env;
 
-mod controllers;
 mod database;
+mod extractors;
+mod handlers;
 mod models;
 mod modules;
+mod routes;
 mod state;
 mod tests;
 
@@ -16,7 +19,15 @@ async fn main() -> std::io::Result<()> {
     let db_conn = database::conn::DatabaseConn::create_pool().await;
     let pool = db_conn.pool().clone();
 
-    let app_state = state::AppState { pool };
+    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
+    let app_state = state::AppState { pool, jwt_secret };
+
+    let server_ip = env::var("SERVER_IP").expect("SERVER_IP must be set");
+    let server_port = env::var("SERVER_PORT")
+        .expect("SERVER_PORT must be set")
+        .parse::<u16>()
+        .expect("Invalid port number");
 
     HttpServer::new(move || {
         App::new()
@@ -27,32 +38,12 @@ async fn main() -> std::io::Result<()> {
                     .allow_any_method()
                     .allow_any_header(),
             )
-            .route(
-                "/healthcheck",
-                web::get().to(controllers::phone_controller::PhoneController::health_check),
-            )
-            .route(
-                "/get-phone/{phone_id}",
-                web::get().to(controllers::phone_controller::PhoneController::get_phone),
-            )
-            .route(
-                "/get-all-phones",
-                web::get().to(controllers::phone_controller::PhoneController::get_all_phones),
-            )
-            .route(
-                "/get-all-images",
-                web::get().to(controllers::image_controller::ImageController::get_all_images),
-            )
-            .route(
-                "/insert-image",
-                web::post().to(controllers::image_controller::ImageController::insert_image),
-            )
-            .route(
-                "/get-image/{phone_id}",
-                web::get().to(controllers::image_controller::ImageController::get_image),
-            )
+            .configure(routes::routes::healthcheck)
+            .configure(routes::routes::phone)
+            .configure(routes::routes::image)
+            .configure(routes::routes::jwt_token)
     })
-    .bind(("localhost", 8000))?
+    .bind((server_ip, server_port))?
     .run()
     .await?;
 
