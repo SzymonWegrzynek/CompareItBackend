@@ -42,6 +42,7 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::routes::phone)
             .configure(routes::routes::image)
             .configure(routes::routes::jwt_token)
+            .configure(routes::routes::user)
     })
     .bind((server_ip, server_port))?
     .run()

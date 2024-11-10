@@ -17,7 +17,7 @@ impl JwtToken {
         app_state: web::Data<AppState>,
     ) -> HttpResponse {
         let id: usize = path.into_inner();
-        let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
+        let exp: usize = (Utc::now() + Duration::days(7)).timestamp() as usize;
         let claims: Claims = Claims { id, exp };
         let token: String = encode(
             &Header::default(),

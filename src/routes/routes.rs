@@ -3,6 +3,7 @@ use actix_web::web;
 use crate::handlers::auth_handler::JwtToken;
 use crate::handlers::image_handler::ImageHandler;
 use crate::handlers::phone_handler::PhoneHandler;
+use crate::handlers::user_handler::UserHandler;
 
 pub fn healthcheck(cfg: &mut web::ServiceConfig) {
     cfg.route("/healthcheck", web::get().to(PhoneHandler::healthcheck));
@@ -33,4 +34,8 @@ pub fn jwt_token(cfg: &mut web::ServiceConfig) {
     );
     cfg.route("/v1/decode-token", web::post().to(JwtToken::decode_token));
     cfg.route("/v1/protected", web::get().to(JwtToken::protected));
+}
+
+pub fn user(cfg: &mut web::ServiceConfig) {
+    cfg.route("/v1/create-user", web::post().to(UserHandler::create_user));
 }
