@@ -12,11 +12,7 @@ use crate::state::AppState;
 pub struct JwtToken;
 
 impl JwtToken {
-    pub async fn encode_token(
-        path: web::Path<usize>,
-        app_state: web::Data<AppState>,
-    ) -> HttpResponse {
-        let id: usize = path.into_inner();
+    pub async fn encode_token(id: usize, app_state: web::Data<AppState>) -> HttpResponse {
         let exp: usize = (Utc::now() + Duration::days(7)).timestamp() as usize;
         let claims: Claims = Claims { id, exp };
         let token: String = encode(
