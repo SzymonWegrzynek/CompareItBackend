@@ -1,5 +1,6 @@
 use actix_web::web;
 
+use crate::handlers::gpt_api_handler::GptApi;
 use crate::handlers::image_handler::ImageHandler;
 use crate::handlers::phone_handler::PhoneHandler;
 use crate::handlers::user_handler::UserHandler;
@@ -29,4 +30,8 @@ pub fn image(cfg: &mut web::ServiceConfig) {
 pub fn user(cfg: &mut web::ServiceConfig) {
     cfg.route("/v1/create-user", web::post().to(UserHandler::create_user));
     cfg.route("/v1/signin-user", web::post().to(UserHandler::signin_user));
+}
+
+pub fn gpt(cfg: &mut web::ServiceConfig) {
+    cfg.route("/v1/send-message", web::post().to(GptApi::send_message));
 }
