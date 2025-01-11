@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse};
 use std::env;
 
-use crate::models::gpt_api::AskGpt;
+use crate::models::gpt_api::{AskGpt, GptAnswer};
 use crate::modules::gpt_in_use::GptInUse;
 
 pub struct GptApi;
@@ -24,7 +24,10 @@ impl GptApi {
         };
 
         match gpt.ask(&form.question).await {
-            Ok(response) => HttpResponse::Ok().body(response),
+            Ok(response) => {
+                let gpt_response = GptAnswer { answer: response };
+                HttpResponse::Ok().json(gpt_response)
+            }
             Err(_) => HttpResponse::BadRequest().body("Error during communication with AI model"),
         }
     }
