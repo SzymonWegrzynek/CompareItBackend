@@ -1,8 +1,10 @@
 use actix_web::{web, HttpResponse};
 use std::env;
 
-use crate::models::gpt_api::{AskGpt, GptAnswer};
-use crate::modules::gpt_in_use::GptInUse;
+use crate::{
+    models::gpt::{AskGpt, GptAnswer},
+    modules::gpt::Gpt,
+};
 
 pub struct GptApi;
 
@@ -15,7 +17,7 @@ impl GptApi {
             }
         };
 
-        let gpt = match GptInUse::new(api_key) {
+        let gpt = match Gpt::new(api_key) {
             Ok(client) => client,
             Err(_) => {
                 return HttpResponse::InternalServerError()

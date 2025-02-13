@@ -1,5 +1,6 @@
 pub mod auth;
-pub mod gpt_api;
+pub mod gpt;
 pub mod image;
 pub mod phone;
+pub mod token;
 pub mod user;

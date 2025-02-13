@@ -1,8 +1,10 @@
 use actix_web::{web, HttpResponse};
 
-use crate::models::phone::{PhoneForSearch, PhoneFullSpec};
-use crate::modules::change_phone_response::ChangePhoneResponse;
-use crate::state::AppState;
+use crate::{
+    models::phone::{PhoneForSearch, PhoneFullSpec},
+    modules::phone_response::ChangePhoneResponse,
+    state::AppState,
+};
 
 pub struct PhoneHandler;
 

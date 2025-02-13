@@ -1,12 +1,14 @@
-use openai_api_rs::v1::api::OpenAIClient;
-use openai_api_rs::v1::chat_completion::{self, ChatCompletionRequest};
-use openai_api_rs::v1::common::GPT4_O;
+use openai_api_rs::v1::{
+    api::OpenAIClient,
+    chat_completion::{self, ChatCompletionRequest},
+    common::GPT4_O,
+};
 
-pub struct GptInUse {
+pub struct Gpt {
     client: OpenAIClient,
 }
 
-impl GptInUse {
+impl Gpt {
     pub fn new(api_key: String) -> Result<Self, Box<dyn std::error::Error>> {
         let client = OpenAIClient::builder().with_api_key(api_key).build()?;
         Ok(Self { client })

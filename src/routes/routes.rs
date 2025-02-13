@@ -1,9 +1,9 @@
 use actix_web::web;
 
-use crate::handlers::gpt_api_handler::GptApi;
-use crate::handlers::image_handler::ImageHandler;
-use crate::handlers::phone_handler::PhoneHandler;
-use crate::handlers::user_handler::UserHandler;
+use crate::handlers::{
+    gpt_handler::GptApi, image_handler::ImageHandler, phone_handler::PhoneHandler,
+    token_handler::TokenHandler, user_handler::UserHandler,
+};
 
 pub fn healthcheck(cfg: &mut web::ServiceConfig) {
     cfg.route("/healthcheck", web::get().to(PhoneHandler::healthcheck));
@@ -34,4 +34,15 @@ pub fn user(cfg: &mut web::ServiceConfig) {
 
 pub fn gpt(cfg: &mut web::ServiceConfig) {
     cfg.route("/v1/send-message", web::post().to(GptApi::send_message));
+}
+
+pub fn token(cfg: &mut web::ServiceConfig) {
+    cfg.route(
+        "/v1/verify-token",
+        web::post().to(TokenHandler::verify_token),
+    );
+    cfg.route(
+        "/v1/protect-route",
+        web::post().to(TokenHandler::protect_route),
+    );
 }

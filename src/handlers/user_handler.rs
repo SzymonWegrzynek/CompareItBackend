@@ -1,9 +1,8 @@
 use actix_web::{web, HttpResponse};
 
 use crate::{
-    handlers::auth_handler::JwtToken,
     models::user::{CreateUserData, CreateUserResponse, SignInResponse, SignInUserData},
-    modules::hash_password::HashPassword,
+    modules::{hash_password::HashPassword, jwt_token::JwtToken},
     state::AppState,
 };
 
@@ -67,16 +66,22 @@ impl UserHandler {
                     Ok(record) => record.user_id,
                     Err(_) => {
                         return HttpResponse::Unauthorized().json(SignInResponse {
-                            message: "user_id not found".to_string(),
+                            message: "User id not found".to_string(),
                             token: "".to_string(),
                         });
                     }
                 };
 
-                let token =
-                    JwtToken::encode_token(uid.try_into().unwrap(), app_state.clone()).await;
-
-                token
+                match JwtToken::encode_token(uid.try_into().unwrap(), &app_state) {
+                    Ok(token) => HttpResponse::Ok().json(SignInResponse {
+                        message: "Successfully logged in".to_string(),
+                        token,
+                    }),
+                    Err(_) => HttpResponse::InternalServerError().json(SignInResponse {
+                        message: "Token generate error".to_string(),
+                        token: "".to_string(),
+                    }),
+                }
             }
             Ok(false) => HttpResponse::Unauthorized().json(SignInResponse {
                 message: "Incorrect email or password".to_string(),

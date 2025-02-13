@@ -1,5 +1,10 @@
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
+use actix_governor::{Governor, GovernorConfigBuilder};
+use actix_web::{
+    http::header::{AUTHORIZATION, CONTENT_TYPE},
+    middleware::Logger,
+    {web, App, HttpServer},
+};
 use dotenv::dotenv;
 use std::env;
 
@@ -16,6 +21,8 @@ mod tests;
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
 
+    env_logger::init();
+
     let db_conn = database::conn::DatabaseConn::create_pool().await;
     let pool = db_conn.pool().clone();
 
@@ -29,20 +36,31 @@ async fn main() -> std::io::Result<()> {
         .parse::<u16>()
         .expect("Invalid port number");
 
+    let governor_conf = GovernorConfigBuilder::default()
+        .per_second(1)
+        .burst_size(100)
+        .finish()
+        .unwrap();
+
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(app_state.clone()))
+            .wrap(Logger::default())
             .wrap(
                 Cors::default()
-                    .allow_any_origin()
-                    .allow_any_method()
-                    .allow_any_header(),
+                    .allowed_origin("http://localhost:5173")
+                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+                    .allowed_headers(vec![CONTENT_TYPE, AUTHORIZATION])
+                    .supports_credentials()
+                    .max_age(3600),
             )
+            .wrap(Governor::new(&governor_conf))
             .configure(routes::routes::healthcheck)
             .configure(routes::routes::phone)
             .configure(routes::routes::image)
             .configure(routes::routes::user)
             .configure(routes::routes::gpt)
+            .configure(routes::routes::token)
     })
     .bind((server_ip, server_port))?
     .run()

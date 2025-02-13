@@ -14,6 +14,6 @@ mod tests {
 
         let db_conn = DatabaseConn::create_pool().await;
         let result = query("SELECT 1").fetch_one(db_conn.pool()).await;
-        assert!(result.is_ok(), "failed to create conn poll")
+        assert!(result.is_ok(), "failed to create conn pool")
     }
 }

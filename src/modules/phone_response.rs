@@ -1,5 +1,7 @@
-use crate::models::phone::{PhoneFullSpec, PhoneFullSpecResponse};
-use crate::modules::stock_image::StockImage;
+use crate::{
+    models::phone::{PhoneFullSpec, PhoneFullSpecResponse},
+    modules::stock_image::StockImage,
+};
 
 pub struct ChangePhoneResponse;
 

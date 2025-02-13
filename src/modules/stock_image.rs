@@ -1,7 +1,9 @@
 use base64::{engine::general_purpose, Engine};
-use std::fs::File;
-use std::io::{BufReader, Read};
-use std::path::Path;
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+    path::Path,
+};
 
 pub struct StockImage {
     pub data: Vec<u8>,

@@ -1,8 +1,6 @@
 use actix_web::{web, HttpResponse};
 
-use crate::models::image::InsertImageRequest;
-use crate::modules::stock_image::StockImage;
-use crate::state::AppState;
+use crate::{models::image::InsertImageRequest, modules::stock_image::StockImage, state::AppState};
 
 pub struct ImageHandler;
 
