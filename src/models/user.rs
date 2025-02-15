@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use sqlx::Type;
+use std::fmt;
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateUserData {
@@ -22,4 +24,28 @@ pub struct SignInUserData {
 pub struct SignInResponse {
     pub message: String,
     pub token: String,
+}
+
+#[derive(Type, Serialize, Deserialize)]
+#[sqlx(type_name = "user_role", rename_all = "lowercase")]
+pub enum UserRole {
+    Admin,
+    User,
+    Moderator,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct User {
+    pub role: UserRole,
+}
+
+impl fmt::Display for UserRole {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let role = match self {
+            UserRole::Admin => "admin",
+            UserRole::User => "user",
+            UserRole::Moderator => "moderator",
+        };
+        write!(f, "{}", role)
+    }
 }

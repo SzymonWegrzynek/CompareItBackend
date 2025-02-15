@@ -7,13 +7,13 @@ pub struct ImageHandler;
 impl ImageHandler {
     pub async fn insert_image(
         app_state: web::Data<AppState>,
-        form: web::Json<InsertImageRequest>,
+        payload: web::Json<InsertImageRequest>,
     ) -> HttpResponse {
-        let stock_image = StockImage::get_stock_image(&form.image_url);
+        let stock_image = StockImage::get_stock_image(&payload.image_url);
 
         match sqlx::query_file!(
             "src/queries/insert_image.sql",
-            &form.model_id,
+            &payload.model_id,
             stock_image.data
         )
         .execute(&app_state.pool)

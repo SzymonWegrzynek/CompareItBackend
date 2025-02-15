@@ -4,16 +4,14 @@ use jsonwebtoken::{
     TokenData, Validation,
 };
 
-use crate::{
-    extractors::authentication_token::AuthenticationToken, models::auth::Claims, state::AppState,
-};
+use crate::{models::auth::Claims, state::AppState};
 
 pub struct JwtToken;
 
 impl JwtToken {
-    pub fn encode_token(id: usize, app_state: &AppState) -> Result<String, JwtError> {
+    pub fn encode_token(id: usize, role: String, app_state: &AppState) -> Result<String, JwtError> {
         let exp: usize = (Utc::now() + Duration::days(1)).timestamp() as usize;
-        let claims: Claims = Claims { id, exp };
+        let claims: Claims = Claims { id, role, exp };
 
         encode(
             &Header::default(),
@@ -28,10 +26,5 @@ impl JwtToken {
             &DecodingKey::from_secret(app_state.jwt_secret.as_str().as_ref()),
             &Validation::new(Algorithm::HS256),
         )
-    }
-
-    pub async fn protected(auth_token: &AuthenticationToken) -> Result<String, String> {
-        println!("{}", auth_token.id);
-        Ok("Authorized".to_owned())
     }
 }

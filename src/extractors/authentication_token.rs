@@ -15,6 +15,7 @@ use crate::{models::auth::Claims, state::AppState};
 #[derive(Serialize, Deserialize)]
 pub struct AuthenticationToken {
     pub id: usize,
+    pub role: String,
 }
 
 impl FromRequest for AuthenticationToken {
@@ -54,6 +55,7 @@ impl FromRequest for AuthenticationToken {
         match decode {
             Ok(token) => ready(Ok(AuthenticationToken {
                 id: token.claims.id,
+                role: token.claims.role,
             })),
             Err(_) => ready(Err(ErrorUnauthorized("Invalid authentication token sent"))),
         }

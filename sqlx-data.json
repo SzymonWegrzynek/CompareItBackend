@@ -1,0 +1,5 @@
+{
+  "enums": {
+    "user_role": ["user", "admin", "moderator"]
+  }
+}

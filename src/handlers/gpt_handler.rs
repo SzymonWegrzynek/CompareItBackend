@@ -9,7 +9,7 @@ use crate::{
 pub struct GptApi;
 
 impl GptApi {
-    pub async fn send_message(form: web::Json<AskGpt>) -> HttpResponse {
+    pub async fn send_message(payload: web::Json<AskGpt>) -> HttpResponse {
         let api_key = match env::var("OPENAI_API_KEY") {
             Ok(key) => key,
             Err(_) => {
@@ -25,7 +25,7 @@ impl GptApi {
             }
         };
 
-        match gpt.ask(&form.question).await {
+        match gpt.ask(&payload.question).await {
             Ok(response) => {
                 let gpt_response = GptAnswer { answer: response };
                 HttpResponse::Ok().json(gpt_response)

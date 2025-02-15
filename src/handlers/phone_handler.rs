@@ -13,8 +13,11 @@ impl PhoneHandler {
         HttpResponse::Ok().into()
     }
 
-    pub async fn get_phone(app_state: web::Data<AppState>, path: web::Path<usize>) -> HttpResponse {
-        let phone_id: usize = path.into_inner();
+    pub async fn get_phone(
+        app_state: web::Data<AppState>,
+        payload: web::Path<usize>,
+    ) -> HttpResponse {
+        let phone_id: usize = payload.into_inner();
 
         let phone: sqlx::Result<PhoneFullSpec> = sqlx::query_file_as!(
             PhoneFullSpec,

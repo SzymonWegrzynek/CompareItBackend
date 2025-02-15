@@ -7,5 +7,10 @@ pub struct VerifyToken {
 
 #[derive(Serialize, Deserialize)]
 pub struct ProtectRoute {
-    pub id: String,
+    pub token: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ProtectRouteResponse {
+    pub role: String,
 }
