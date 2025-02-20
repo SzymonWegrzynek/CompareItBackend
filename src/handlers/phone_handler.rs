@@ -9,10 +9,6 @@ use crate::{
 pub struct PhoneHandler;
 
 impl PhoneHandler {
-    pub async fn healthcheck() -> HttpResponse {
-        HttpResponse::Ok().into()
-    }
-
     pub async fn get_phone(
         app_state: web::Data<AppState>,
         payload: web::Path<usize>,
@@ -37,7 +33,7 @@ impl PhoneHandler {
     }
 
     pub async fn get_all_phones(app_state: web::Data<AppState>) -> HttpResponse {
-        match sqlx::query_file_as!(PhoneForSearch, "src/queries/get_phone.sql")
+        match sqlx::query_file_as!(PhoneForSearch, "src/queries/get_phones.sql")
             .fetch_all(&app_state.pool)
             .await
         {

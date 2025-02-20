@@ -12,9 +12,7 @@ impl GptApi {
     pub async fn send_message(payload: web::Json<AskGpt>) -> HttpResponse {
         let api_key = match env::var("OPENAI_API_KEY") {
             Ok(key) => key,
-            Err(_) => {
-                return HttpResponse::InternalServerError().body("Error related to the api key")
-            }
+            Err(_) => return HttpResponse::InternalServerError().body("Error with api key"),
         };
 
         let gpt = match Gpt::new(api_key) {

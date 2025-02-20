@@ -4,19 +4,9 @@ use actix_web::{
     http::header::{HeaderValue, AUTHORIZATION},
     web, Error as ActixWebError, FromRequest, HttpRequest,
 };
-use jsonwebtoken::{
-    decode, errors::Error as JwtError, Algorithm, DecodingKey, TokenData, Validation,
-};
-use serde::{Deserialize, Serialize};
 use std::future::{ready, Ready};
 
-use crate::{models::auth::Claims, state::AppState};
-
-#[derive(Serialize, Deserialize)]
-pub struct AuthenticationToken {
-    pub id: usize,
-    pub role: String,
-}
+use crate::{models::auth::AuthenticationToken, modules::jwt_token::JwtToken, state::AppState};
 
 impl FromRequest for AuthenticationToken {
     type Error = ActixWebError;
@@ -33,6 +23,8 @@ impl FromRequest for AuthenticationToken {
 
         let auth_token: String = auth_header.unwrap().to_str().unwrap_or("").to_string();
 
+        let auth_token = auth_token.strip_prefix("Bearer ").unwrap_or("").to_string();
+
         if auth_token.is_empty() {
             return ready(Err(ErrorUnauthorized(
                 "Authentication token has foreign chars",
@@ -44,13 +36,7 @@ impl FromRequest for AuthenticationToken {
             None => return ready(Err(ErrorUnauthorized("Missing app state"))),
         };
 
-        let jwt_secret = &app_state.jwt_secret;
-
-        let decode: Result<TokenData<Claims>, JwtError> = decode::<Claims>(
-            &auth_token,
-            &DecodingKey::from_secret(jwt_secret.as_ref()),
-            &Validation::new(Algorithm::HS256),
-        );
+        let decode = JwtToken::decode_token(&auth_token, &app_state);
 
         match decode {
             Ok(token) => ready(Ok(AuthenticationToken {

@@ -1,12 +1,12 @@
 use actix_web::web;
 
 use crate::handlers::{
-    gpt_handler::GptApi, image_handler::ImageHandler, phone_handler::PhoneHandler,
-    token_handler::TokenHandler, user_handler::UserHandler,
+    gpt_handler::GptApi, healthcheck_handler::HealthCheck, image_handler::ImageHandler,
+    login_handler::LoginHandler, phone_handler::PhoneHandler, token_handler::TokenHandler,
 };
 
 pub fn healthcheck(cfg: &mut web::ServiceConfig) {
-    cfg.route("/healthcheck", web::get().to(PhoneHandler::healthcheck));
+    cfg.route("/healthcheck", web::get().to(HealthCheck::healthcheck));
 }
 
 pub fn phone(cfg: &mut web::ServiceConfig) {
@@ -27,9 +27,9 @@ pub fn image(cfg: &mut web::ServiceConfig) {
     );
 }
 
-pub fn user(cfg: &mut web::ServiceConfig) {
-    cfg.route("/v1/create-user", web::post().to(UserHandler::create_user));
-    cfg.route("/v1/signin-user", web::post().to(UserHandler::signin_user));
+pub fn login(cfg: &mut web::ServiceConfig) {
+    cfg.route("/v1/create-user", web::post().to(LoginHandler::create_user));
+    cfg.route("/v1/signin-user", web::post().to(LoginHandler::signin_user));
 }
 
 pub fn gpt(cfg: &mut web::ServiceConfig) {
@@ -38,11 +38,7 @@ pub fn gpt(cfg: &mut web::ServiceConfig) {
 
 pub fn token(cfg: &mut web::ServiceConfig) {
     cfg.route(
-        "/v1/verify-token",
-        web::post().to(TokenHandler::verify_token),
-    );
-    cfg.route(
-        "/v1/protect-route",
-        web::post().to(TokenHandler::protect_route),
+        "/v1/extract-token",
+        web::post().to(TokenHandler::extract_token),
     );
 }

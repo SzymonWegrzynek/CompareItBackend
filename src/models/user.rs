@@ -23,10 +23,9 @@ pub struct SignInUserData {
 #[derive(Serialize, Deserialize)]
 pub struct SignInResponse {
     pub message: String,
-    pub token: String,
 }
 
-#[derive(Type, Serialize, Deserialize)]
+#[derive(Type, Serialize, Deserialize, Debug)]
 #[sqlx(type_name = "user_role", rename_all = "lowercase")]
 pub enum UserRole {
     Admin,
@@ -36,7 +35,9 @@ pub enum UserRole {
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
+    pub user_id: i32,
     pub role: UserRole,
+    pub password: String,
 }
 
 impl fmt::Display for UserRole {

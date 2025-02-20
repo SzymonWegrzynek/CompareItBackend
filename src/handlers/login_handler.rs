@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{http::header, web, HttpResponse};
 
 use crate::{
     models::user::{CreateUserData, CreateUserResponse, SignInResponse, SignInUserData, User},
@@ -6,9 +6,9 @@ use crate::{
     state::AppState,
 };
 
-pub struct UserHandler;
+pub struct LoginHandler;
 
-impl UserHandler {
+impl LoginHandler {
     pub async fn create_user(
         app_state: web::Data<AppState>,
         payload: web::Json<CreateUserData>,
@@ -42,68 +42,41 @@ impl UserHandler {
         app_state: web::Data<AppState>,
         payload: web::Json<SignInUserData>,
     ) -> HttpResponse {
-        let result = sqlx::query_file!("src/queries/get_user_password.sql", &payload.email)
+        let user = sqlx::query_file_as!(User, "src/queries/get_user.sql", &payload.email)
             .fetch_one(&app_state.pool)
             .await;
 
-        let uid = sqlx::query_file!("src/queries/get_user_id.sql", &payload.email)
-            .fetch_one(&app_state.pool)
-            .await;
-
-        let role = sqlx::query_file_as!(User, "src/queries/get_user_role.sql", &payload.email)
-            .fetch_one(&app_state.pool)
-            .await;
-
-        let hashed_password = match result {
-            Ok(record) => record.password,
+        let user = match user {
+            Ok(record) => record,
             Err(_) => {
                 return HttpResponse::Unauthorized().json(SignInResponse {
                     message: "Incorrect email or password".to_string(),
-                    token: "".to_string(),
-                })
+                });
             }
         };
 
-        match HashPassword::verify_password(&payload.password, &hashed_password) {
+        match HashPassword::verify_password(&payload.password, &user.password) {
             Ok(true) => {
-                let uid = match uid {
-                    Ok(record) => record.user_id,
-                    Err(_) => {
-                        return HttpResponse::Unauthorized().json(SignInResponse {
-                            message: "User id not found".to_string(),
-                            token: "".to_string(),
-                        });
-                    }
-                };
-
-                let role = match role {
-                    Ok(record) => record.role.to_string(),
-                    Err(_) => {
-                        return HttpResponse::Unauthorized().json(SignInResponse {
-                            message: "User role not found".to_string(),
-                            token: "".to_string(),
-                        });
-                    }
-                };
-
-                match JwtToken::encode_token(uid.try_into().unwrap(), role, &app_state) {
-                    Ok(token) => HttpResponse::Ok().json(SignInResponse {
-                        message: "Successfully logged in".to_string(),
-                        token,
-                    }),
+                match JwtToken::encode_token(
+                    user.user_id.try_into().unwrap(),
+                    user.role.to_string(),
+                    &app_state,
+                ) {
+                    Ok(token) => HttpResponse::Ok()
+                        .insert_header((header::AUTHORIZATION, format!("Bearer {}", token)))
+                        .json(SignInResponse {
+                            message: "Successfully logged in".to_string(),
+                        }),
                     Err(_) => HttpResponse::InternalServerError().json(SignInResponse {
-                        message: "Token generate error".to_string(),
-                        token: "".to_string(),
+                        message: "Error generating token".to_string(),
                     }),
                 }
             }
             Ok(false) => HttpResponse::Unauthorized().json(SignInResponse {
                 message: "Incorrect email or password".to_string(),
-                token: "".to_string(),
             }),
             Err(_) => HttpResponse::Unauthorized().json(SignInResponse {
-                message: "Error".to_string(),
-                token: "".to_string(),
+                message: "Sign in error".to_string(),
             }),
         }
     }

@@ -23,7 +23,7 @@ impl JwtToken {
     pub fn decode_token(token: &str, app_state: &AppState) -> Result<TokenData<Claims>, JwtError> {
         decode::<Claims>(
             token,
-            &DecodingKey::from_secret(app_state.jwt_secret.as_str().as_ref()),
+            &DecodingKey::from_secret(app_state.jwt_secret.as_ref()),
             &Validation::new(Algorithm::HS256),
         )
     }

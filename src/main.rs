@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::routes::healthcheck)
             .configure(routes::routes::phone)
             .configure(routes::routes::image)
-            .configure(routes::routes::user)
+            .configure(routes::routes::login)
             .configure(routes::routes::gpt)
             .configure(routes::routes::token)
     })

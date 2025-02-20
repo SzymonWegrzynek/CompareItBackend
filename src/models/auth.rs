@@ -6,3 +6,9 @@ pub struct Claims {
     pub role: String,
     pub exp: usize,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct AuthenticationToken {
+    pub id: usize,
+    pub role: String,
+}
