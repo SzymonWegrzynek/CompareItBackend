@@ -23,7 +23,9 @@ impl GptApi {
             }
         };
 
-        match gpt.ask(&payload.question).await {
+        let ask_gpt = gpt.ask(&payload.question).await;
+
+        match ask_gpt {
             Ok(response) => {
                 let gpt_response = GptAnswer { answer: response };
                 HttpResponse::Ok().json(gpt_response)

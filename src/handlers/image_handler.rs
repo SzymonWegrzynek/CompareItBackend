@@ -11,14 +11,15 @@ impl ImageHandler {
     ) -> HttpResponse {
         let stock_image = StockImage::get_stock_image(&payload.image_url);
 
-        match sqlx::query_file!(
+        let result = sqlx::query_file!(
             "src/queries/insert_image.sql",
             &payload.model_id,
             stock_image.data
         )
         .execute(&app_state.pool)
-        .await
-        {
+        .await;
+
+        match result {
             Ok(_) => HttpResponse::Created().into(),
             Err(_) => HttpResponse::BadRequest().into(),
         }

@@ -13,17 +13,14 @@ impl PhoneHandler {
         app_state: web::Data<AppState>,
         payload: web::Path<usize>,
     ) -> HttpResponse {
-        let phone_id: usize = payload.into_inner();
+        let pid: usize = payload.into_inner();
 
-        let phone: sqlx::Result<PhoneFullSpec> = sqlx::query_file_as!(
-            PhoneFullSpec,
-            "src/queries/get_phone_by_id.sql",
-            phone_id as i64,
-        )
-        .fetch_one(&app_state.pool)
-        .await;
+        let result: sqlx::Result<PhoneFullSpec> =
+            sqlx::query_file_as!(PhoneFullSpec, "src/queries/get_phone_by_id.sql", pid as i64,)
+                .fetch_one(&app_state.pool)
+                .await;
 
-        match phone {
+        match result {
             Ok(phone) => {
                 let response = ChangePhoneResponse::change_phone_response(phone);
                 HttpResponse::Ok().json(response)
@@ -33,10 +30,11 @@ impl PhoneHandler {
     }
 
     pub async fn get_all_phones(app_state: web::Data<AppState>) -> HttpResponse {
-        match sqlx::query_file_as!(PhoneForSearch, "src/queries/get_phones.sql")
+        let result = sqlx::query_file_as!(PhoneForSearch, "src/queries/get_phones.sql")
             .fetch_all(&app_state.pool)
-            .await
-        {
+            .await;
+
+        match result {
             Ok(phones) => HttpResponse::Ok().json(phones),
             Err(_) => HttpResponse::BadRequest().into(),
         }
