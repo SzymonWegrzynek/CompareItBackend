@@ -9,7 +9,7 @@ use crate::{
 pub struct PhoneHandler;
 
 impl PhoneHandler {
-    pub async fn get_phone(
+    pub async fn get_phones(
         app_state: web::Data<AppState>,
         payload: web::Path<usize>,
     ) -> HttpResponse {

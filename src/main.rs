@@ -3,14 +3,15 @@ use actix_governor::{Governor, GovernorConfigBuilder};
 use actix_web::{
     http::header::{AUTHORIZATION, CONTENT_TYPE},
     middleware::Logger,
-    {web, App, HttpServer},
+    web, App, HttpServer,
 };
 use dotenv::dotenv;
 use std::env;
 
 mod database;
-mod extractors;
+mod extractor;
 mod handlers;
+mod middleware;
 mod models;
 mod modules;
 mod routes;
@@ -55,12 +56,13 @@ async fn main() -> std::io::Result<()> {
                     .max_age(3600),
             )
             .wrap(Governor::new(&governor_conf))
+            .wrap(middleware::auth_header_middleware::AuthHeader)
             .configure(routes::routes::healthcheck)
             .configure(routes::routes::phone)
             .configure(routes::routes::image)
-            .configure(routes::routes::login)
-            .configure(routes::routes::gpt)
-            .configure(routes::routes::token)
+            .configure(routes::routes::user)
+            .configure(routes::routes::chat)
+            .configure(routes::routes::auth)
     })
     .bind((server_ip, server_port))?
     .run()

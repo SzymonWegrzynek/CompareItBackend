@@ -4,6 +4,6 @@ pub struct HealthCheck;
 
 impl HealthCheck {
     pub async fn healthcheck() -> HttpResponse {
-        HttpResponse::Ok().into()
+        HttpResponse::Ok().finish()
     }
 }

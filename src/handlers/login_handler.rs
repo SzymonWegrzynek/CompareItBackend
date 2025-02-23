@@ -1,7 +1,11 @@
-use actix_web::{http::header, web, HttpResponse};
+use actix_web::{
+    cookie::{time::OffsetDateTime, Cookie, SameSite},
+    web, HttpResponse,
+};
+use chrono::{Duration, Utc};
 
 use crate::{
-    models::user::{CreateUserData, CreateUserResponse, SignInResponse, SignInUserData, User},
+    models::login::{CreateUserData, CreateUserResponse, SignInResponse, SignInUserData, User},
     modules::{hash_password::HashPassword, jwt_token::JwtToken},
     state::AppState,
 };
@@ -78,8 +82,18 @@ impl LoginHandler {
             }
         };
 
+        let expire_time = Utc::now() + Duration::hours(24);
+        let expire_time = OffsetDateTime::from_unix_timestamp(expire_time.timestamp()).unwrap();
+
         HttpResponse::Ok()
-            .insert_header((header::AUTHORIZATION, format!("Bearer {}", token)))
+            .cookie(
+                Cookie::build("UserToken", token)
+                    .http_only(true)
+                    .secure(false)
+                    .same_site(SameSite::Lax)
+                    .expires(expire_time)
+                    .finish(),
+            )
             .json(SignInResponse {
                 message: "Successfully logged in".to_string(),
             })
