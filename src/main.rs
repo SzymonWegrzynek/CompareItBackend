@@ -32,6 +32,7 @@ async fn main() -> std::io::Result<()> {
     let app_state = state::AppState { pool, jwt_secret };
 
     let server_ip = env::var("SERVER_IP").expect("SERVER_IP must be set");
+
     let server_port = env::var("SERVER_PORT")
         .expect("SERVER_PORT must be set")
         .parse::<u16>()
@@ -50,7 +51,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(
                 Cors::default()
                     .allowed_origin("http://localhost:5173")
-                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+                    .allowed_methods(vec!["GET", "POST"])
                     .allowed_headers(vec![CONTENT_TYPE, AUTHORIZATION])
                     .supports_credentials()
                     .max_age(3600),
